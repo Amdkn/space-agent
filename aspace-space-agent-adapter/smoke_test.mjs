@@ -28,12 +28,13 @@ test("contract.json pins the frozen commit and version", async () => {
   assert.equal(CONTRACT.server.bind, "127.0.0.1 (never 0.0.0.0 in A'Space use)");
   const pkg = JSON.parse(await fs.readFile(path.join(REPO_ROOT, "package.json"), "utf8"));
   assert.equal(pkg.version, "0.36.0");
-  // HEAD is the adapter commit; the gel is its single ancestor:
-  // exactly one commit above the pinned commit, and the pin is an ancestor.
-  const above = (await run("git", ["rev-list", "--count", `${CONTRACT.adapter.pinned_space_agent_commit}..HEAD`])).stdout.trim();
-  assert.equal(above, "1");
-  const parent = (await run("git", ["rev-parse", "HEAD~1"])).stdout.trim();
-  assert.equal(parent, CONTRACT.adapter.pinned_space_agent_commit);
+  // H-M2, stable across adapter commits: the gel is an ancestor of HEAD
+  // and every file changed since the gel lives under the adapter dir.
+  const mergeBase = (await run("git", ["merge-base", "HEAD", CONTRACT.adapter.pinned_space_agent_commit])).stdout.trim();
+  assert.equal(mergeBase, CONTRACT.adapter.pinned_space_agent_commit);
+  const changed = (await run("git", ["diff", "--name-only", `${CONTRACT.adapter.pinned_space_agent_commit}..HEAD`])).stdout.trim().split("\n").filter(Boolean);
+  assert.ok(changed.length > 0);
+  for (const file of changed) assert.ok(file.startsWith("aspace-space-agent-adapter/"), file);
 });
 
 test("space --version prints the git-derived version (no tags in the fork)", async () => {
