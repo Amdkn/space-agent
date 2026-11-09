@@ -12,9 +12,9 @@ Version 0.36.0, Node >= 20. No telemetry SDK in the dependency tree
 
 ## Contract (`contract.json`)
 
-- **CLI**: `node space --version` → `v0.0+101` in the fork (git-derived: no tags
-  copied at fork creation, 101 commits at the gel; upstream's latest tag is
-  v0.66 — the version pin is package.json 0.36.0, not this string); `node space help`; `node space serve
+- **CLI**: `node space --version` → `v0.0+<commits>` in the fork (git-derived: no tags
+  copied at fork creation; upstream's latest tag is v0.66 — the version pin is
+  package.json 0.36.0, not this string); `node space help`; `node space serve
   HOST=127.0.0.1 PORT=0 CUSTOMWARE_PATH=<scratch>` (ephemeral port, URL printed
   as `space server listening at http://127.0.0.1:<port>`).
 - **Server**: binds 127.0.0.1 only in A'Space use (default upstream is 0.0.0.0 —

@@ -28,18 +28,23 @@ test("contract.json pins the frozen commit and version", async () => {
   assert.equal(CONTRACT.server.bind, "127.0.0.1 (never 0.0.0.0 in A'Space use)");
   const pkg = JSON.parse(await fs.readFile(path.join(REPO_ROOT, "package.json"), "utf8"));
   assert.equal(pkg.version, "0.36.0");
-  const head = (await run("git", ["rev-parse", "HEAD"])).stdout.trim();
-  assert.equal(head, CONTRACT.adapter.pinned_space_agent_commit);
+  // HEAD is the adapter commit; the gel is its single ancestor:
+  // exactly one commit above the pinned commit, and the pin is an ancestor.
+  const above = (await run("git", ["rev-list", "--count", `${CONTRACT.adapter.pinned_space_agent_commit}..HEAD`])).stdout.trim();
+  assert.equal(above, "1");
+  const parent = (await run("git", ["rev-parse", "HEAD~1"])).stdout.trim();
+  assert.equal(parent, CONTRACT.adapter.pinned_space_agent_commit);
 });
 
 test("space --version prints the git-derived version (no tags in the fork)", async () => {
   // The fork was created with default_branch_only=true: 0 tags copied.
   // Upstream's latest tag is v0.66, but the fork has none, so the
-  // git-derived version is v0.0 + total commits at the gel (101).
-  // The version pin is package.json 0.36.0 (checked above), not this string.
+  // git-derived version is v0.0 + total commits at HEAD. The version
+  // pin is package.json 0.36.0 (checked above), not this string.
   const { code, stdout } = await run("node", ["space", "--version"]);
   assert.equal(code, 0);
-  assert.equal(stdout.trim(), "v0.0+101");
+  const count = (await run("git", ["rev-list", "--count", "HEAD"])).stdout.trim();
+  assert.equal(stdout.trim(), `v0.0+${count}`);
 });
 
 test("unknown command exits non-zero", async () => {
